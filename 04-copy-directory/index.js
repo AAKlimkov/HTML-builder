@@ -15,7 +15,7 @@ fs.mkdir(pathToFileCopy, { recursive: true }, (err) => {
 });
 
 
-fs.readdir(pathToFileCopy, { withFileTypes: true }, (err, files) => {
+fs.readdir(pathToFileCopy, (err, files) => {
   files.forEach(el => {
     if (!el.isDirectory()) {
       let dest = path.join(__dirname, 'files-copy', el.name);

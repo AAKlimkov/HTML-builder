@@ -20,10 +20,10 @@ fs.readdir(workFolder, { withFileTypes: true }, (err, files) => {
       const currentReadStream = fs.createReadStream(currentFile); //создаем поток чтения
       currentReadStream.pipe(fileWriteStream, { end: false }); // записываем в файл, не заканчивая поток
       currentReadStream.on('end', function () { // закрываем текущий поток чтения, рекурсивно вызвав объеденения файлов,
-        streamMergeRecursive(files, fileWriteStream);
+        files.length ? streamMergeRecursive(files, fileWriteStream) : '';
       });
     } else{                                        // если мы не прошли по типу файла, просто вызываем еще раз объединение
-      streamMergeRecursive(files, fileWriteStream);
+      files.length ? streamMergeRecursive(files, fileWriteStream) : '';
     }
   }
 });
