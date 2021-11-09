@@ -8,8 +8,8 @@ async function createHtml(compPath, templPath, dest) {
     for (const item of items) {
       const stats = await fs.stat(path.join(compPath, item));
       if (stats.isFile()) {
-        const name = fs.parse(item).name;
-        const ext = fs.parse(item).ext;
+        const name = path.parse(item).name;
+        const ext = path.parse(item).ext;
         if (ext == '.html' && template.includes(`{{${name}}}`)) {
           const data = await fs.readFile(path.join(compPath, item), { encoding: 'utf8' });
           template = template.replace(`{{${name}}}`, data);
@@ -26,7 +26,7 @@ async function createStyles(src, dest) {
     for (const item of items) {
       const stats = await fs.stat(path.join(src, item));
       if (stats.isFile()) {
-        const ext = fs.parse(item).ext;
+        const ext = path.parse(item).ext;
         if (ext == '.css') {
           const data = await fs.readFile(path.join(src, item));
           await fs.appendFile(dest, data);
@@ -43,7 +43,7 @@ async function copyAssets(src, dest) {
     await fs.mkdir(dest, { recursive: true });
     const items = await fs.readdir(src);
     for (const item of items) {
-      copyAssets(path.join(src, item), fs.join(dest, item));
+      copyAssets(path.join(src, item), path.join(dest, item));
     }
   } else await fs.copyFile(src, dest);
 }
