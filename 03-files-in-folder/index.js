@@ -13,7 +13,7 @@ fs.readdir(pathToFolder, { withFileTypes: true }, (err, files) => {
       const exten = path.extname(path.join(pathToFolder, el.name)).substr(1);
       stat(path.join(pathToFolder, el.name), (err, stats) => {
         let size = stats.size;
-        console.log(name + ' - ' + exten + ' - ' + size + ' kb');
+        console.log(name + ' - ' + exten + ' - ' + Math.round(size/1024)  + ' kb');
       });
     }
   });
