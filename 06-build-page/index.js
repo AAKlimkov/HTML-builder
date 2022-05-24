@@ -1,59 +1,62 @@
-const fs = require('fs/promises');
-const path = require('path');
 
-async function createHtml(compPath, templPath, dest) {
-  let template = await fs.readFile(templPath,'utf8' );
-  const items = await fs.readdir(compPath);
-  if (items.length) {
-    for (const item of items) {
-      const stats = await fs.stat(path.join(compPath, item));
-      if (stats.isFile()) {
-        const name = path.parse(item).name;
-        const ext = path.parse(item).ext;
-        if (ext == '.html' && template.includes(`{{${name}}}`)) {
-          const data = await fs.readFile(path.join(compPath, item), { encoding: 'utf8' });
-          template = template.replace(`{{${name}}}`, data);
-        }
-      }
-    }
-  }
-  fs.writeFile(dest, template);
-}
+const { mkdir, readdir, readFile, appendFile, truncate } = require('fs/promises');
+const { join, extname, basename } = require('path');
+const mergeStyles = require('../05-merge-styles');
+const copyDir = require('../04-copy-directory');
 
-async function createStyles(src, dest) {
-  const items = await fs.readdir(src);
-  if (items.length) {
-    for (const item of items) {
-      const stats = await fs.stat(path.join(src, item));
-      if (stats.isFile()) {
-        const ext = path.parse(item).ext;
-        if (ext == '.css') {
-          const data = await fs.readFile(path.join(src, item));
-          await fs.appendFile(dest, data);
-        }
-      }
+async function removeHTML(targetHTML, dist) {
+  try {
+    const dir = await readdir(dist);
+    const bundleName = 'index.html';
+
+    if(dir.includes(bundleName)) {
+      await truncate(targetHTML);
     }
+  } catch(err) {
+    console.log(err);
   }
 }
 
-async function copyAssets(src, dest) {
-  const stats = await fs.stat(src);
-  const isDirectory = stats.isDirectory();
-  if (isDirectory) {
-    await fs.mkdir(dest, { recursive: true });
-    const items = await fs.readdir(src);
-    for (const item of items) {
-      copyAssets(path.join(src, item), path.join(dest, item));
+async function generateHtml(targetHTML) {
+  try {
+    const dirTpl = join(__dirname, 'components');
+    const tplComponents = await readdir(dirTpl, {withFileTypes: true});
+    let template = await readFile(join(__dirname, 'template.html'), 'utf-8');
+
+    for(let tpl of tplComponents) {
+      const ext = extname(tpl.name);
+      const tplName = basename(tpl.name, ext);
+      const tplContent = await readFile(join(dirTpl, tpl.name), 'utf-8');
+
+      const regex = new RegExp(`{{${tplName}}}`, 'g');
+      template = template.replace(regex, tplContent);
     }
-  } else await fs.copyFile(src, dest);
+
+    appendFile(targetHTML, template, err => {
+      if(err) console.log(err);
+    });
+  } catch(err) {
+    console.log(err);
+  }
 }
 
-async function buildPage() {
-  await fs.rm(path.join(__dirname, 'project-dist'), { recursive: true, force: true });
-  await fs.mkdir(path.join(__dirname, 'project-dist'), { recursive: true });
-  createHtml(path.join(__dirname, 'components'), path.join(__dirname, 'template.html'), path.join(__dirname, 'project-dist' ,'index.html'));
-  createStyles(path.join(__dirname, 'styles'), path.join(__dirname, 'project-dist' ,'style.css'));
-  copyAssets(path.join(__dirname, 'assets'), path.join(__dirname, 'project-dist', 'assets'));
+async function generateBuild() {
+  const dist = join(__dirname, 'project-dist');
+  await mkdir(dist, {recursive: true});
+  
+  const targetHTML = join(__dirname, 'project-dist', 'index.html');
+  await removeHTML(targetHTML, dist);
+  await generateHtml(targetHTML);
+
+  const from = join(__dirname, 'assets');
+  const to = join(__dirname, 'project-dist', 'assets');
+  await copyDir(from, to);
+
+  const bundleCSS = 'style.css';
+  const fromCSS = join(__dirname, 'styles');
+  const toCSS = join(__dirname, 'project-dist');
+  const targetCSS = join(__dirname, 'project-dist', bundleCSS);
+  await mergeStyles(fromCSS, toCSS, targetCSS, bundleCSS);
 }
 
-buildPage();
+generateBuild();

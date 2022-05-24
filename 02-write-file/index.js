@@ -1,35 +1,47 @@
-const readline = require('readline');
-const fs = require('fs');
 const path = require('path');
-const stream = new fs.createWriteStream(path.join(__dirname, 'write.txt'));
+const fs = require('fs');
+const { stdout, stdin } = process;
+const readline = require('readline');
 
+const target = path.join(__dirname, 'text.txt');
+const writeStream = fs.createWriteStream(target, {
+  flags: 'a'
+});
 
+// input The Readable stream to listen to.
+// output The Writable stream to write readline data to.
 const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
+  input: stdin,
+  output: writeStream
 });
 
-rl.question('What do your want to write to file? \n', (userInput) => {
-  if (userInput == 'exit') {
-    rl.close();
+sayHi();
+
+rl.on('line', input => {
+  if(input.includes('exit')) {
+    let res = input.replace('exit', '');
+    if(res === '') {
+      sayBy();
+    } else {
+      rl.output.write(`${res}\n`);
+      sayBy();
+    }
+  } else {
+    console.log(`Received: ${input}`);
+    rl.output.write(`${input}\n`);
   }
-  else {
-    rl.setPrompt('Do your want write some more test? \n');
-    stream.write(userInput+'\n');
-    rl.prompt();
-    rl.on('line', (userInput) => {
-      if (userInput == 'exit') {
-        rl.close();
-      }
-      else {
-        stream.write(userInput+'\n');
-        rl.prompt();
-      }});
-  }
-
 });
 
-
-rl.on('close', () => {
-  console.log('Write Complete');
+// TODO: SIGINT with rl
+process.on('SIGINT', () => {
+  sayBy();
 });
+
+function sayBy(str = '') {
+  stdout.write(`${str}By-by!`);
+  process.exit();
+}
+
+function sayHi() {
+  stdout.write('Hello! Type someting...\n');
+}

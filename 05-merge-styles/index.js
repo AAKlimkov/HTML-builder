@@ -1,30 +1,39 @@
-const fs = require('fs');
-const path = require('path');
+const { readdir, truncate } = require('fs/promises');
+const { join, extname } = require('path');
+const { createReadStream, appendFile } = require('fs');
 
-const workFolder = path.join(__dirname, 'styles');
+async function mergeStyles(from, to, target, bundle) {
+  try {
+    const files = await readdir(from, {withFileTypes: true});
+    const filesTo = await readdir(to);
 
-
-
-fs.readdir(workFolder, { withFileTypes: true }, (err, files) => {
-  const fileWriteStream = new fs.createWriteStream(path.join(__dirname, 'project-dist', 'bundle.css'));
-
-  streamMergeRecursive(files, fileWriteStream);
-  function streamMergeRecursive(files, fileWriteStream) {
-    if (!files.length) {
-      return fileWriteStream.end(`${console.log('Слияние потока завершено')}`);
-      // Наконец, закрываем доступный для записи поток, чтобы предотвратить утечку памяти
+    if(filesTo.includes(bundle)) {
+      await truncate(target);
     }
 
-    const currentFile = path.join(workFolder, files.shift().name); // получаем текущий файл, метод шифт уменьшит наш массив на 1 элемент
-    if (path.extname(path.join(workFolder, currentFile)).substr(1) == 'css') { //проверяем расширение
-      const currentReadStream = fs.createReadStream(currentFile); //создаем поток чтения
-      currentReadStream.pipe(fileWriteStream, { end: false }); // записываем в файл, не заканчивая поток
-      currentReadStream.on('end', function () { // закрываем текущий поток чтения, рекурсивно вызвав объеденения файлов,
-        files.length ? streamMergeRecursive(files, fileWriteStream) : '';
-      });
-    } else{                                        // если мы не прошли по типу файла, просто вызываем еще раз объединение
-      files.length ? streamMergeRecursive(files, fileWriteStream) : '';
+    for(const file of files) {
+      let fileFrom = join(from, file.name);
+
+      if(!file.isDirectory() && extname(fileFrom) === '.css') {
+        let readableStream = createReadStream(fileFrom, 'utf8');
+
+        readableStream.on('data', chunk => {
+          appendFile(target, chunk, err => {
+            if(err) console.log(err);
+          });
+        });
+      }
     }
+  } catch(err) {
+    console.error('err', err);
   }
-});
+}
 
+const bundle = 'bundle.css';
+const from = join(__dirname, 'styles');
+const to = join(__dirname, 'project-dist');
+const target = join(__dirname, 'project-dist', bundle);
+
+mergeStyles(from, to, target, bundle);
+
+module.exports = mergeStyles;

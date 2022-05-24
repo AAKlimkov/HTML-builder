@@ -1,39 +1,40 @@
-const path = require('path');
-const fs = require('fs');
+const { copyFile, mkdir, readdir, unlink } = require('fs/promises');
+const { join } = require('path');
 
-const pathToFileCopy = path.join(__dirname, 'files-copy');
-const pathToFile = path.join(__dirname, 'files');
+async function copyDir(from, to) {
+  try {
+    await mkdir(to, {recursive: true});
 
+    const dirs = await readdir(from, {withFileTypes: true});
+    const filesTo = await readdir(to, {withFileTypes: true});
 
-function callback(err) {
-  if (err) throw err;
+    // неизвестно стало больше файлов или меньше,
+    // поэтому нужно удалять все либо проверять поочередно и если нужно - удалять
+    if(filesTo.length > 0) {
+      for(const file of filesTo) {
+        if(!file.isDirectory()) {
+          unlink(join(to, file.name));
+        }
+      }
+    }
+
+    for(let dir of dirs) {
+      const src = join(from, dir.name);
+      const target = join(to, dir.name);
+
+      if(dir.isDirectory()) {
+        await copyDir(src, target);
+      } else {
+        await copyFile(src, target);
+      }
+    }
+  } catch(e) {
+    console.error(e);
+  }
 }
 
-fs.mkdir(pathToFileCopy, { recursive: true }, (err) => {
-  if (err) throw err;
+const to = join(__dirname, 'files-copy');
+const from = join(__dirname, 'files');
+copyDir(from, to);
 
-});
-
-
-fs.readdir(pathToFileCopy,{ withFileTypes: true }, (err, files) => {
-  files.forEach(el => {
-    if (!el.isDirectory()) {
-      let dest = path.join(__dirname, 'files-copy', el.name);
-      fs.unlink(dest, err =>{
-        if (err) throw err;
-      });
-    }
-  });
-});
-
-fs.readdir(pathToFile, { withFileTypes: true }, (err, files) => {
-  files.forEach(el => {
-    if (!el.isDirectory()) {
-      let sourse = path.join(__dirname, 'files', el.name);
-      let dest = path.join(__dirname, 'files-copy', el.name);
-      fs.copyFile(sourse, dest, callback);
-    }
-  });
-});
-
-
+module.exports = copyDir;
