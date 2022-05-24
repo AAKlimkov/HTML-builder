@@ -15,6 +15,16 @@ readableStream.on('error', function(err) {
 });
 
 
-// fs.readFile('text.txt', 'utf8', function(error, data) {
-//   console.log(error, data);
+// import { join, resolve } from 'path';
+// import { open } from 'node:fs/promises';
+// import { stdout } from 'node:process';
+
+// const __dirname = resolve();
+// const text = join(__dirname, './01-read-file/text.txt');
+// const fd = await open(text);
+// const stream = fd.createReadStream();
+
+// stream.on('readable', function () {
+//   const data = stream.read();
+//   data ? stdout.write(data) : console.log(`В файле по пути ${text} ничего нет `);
 // });

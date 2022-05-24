@@ -27,3 +27,35 @@ async function getFiles(dir) {
 }
 
 getFiles(target);
+
+
+// import { readdir } from 'fs/promises';
+// import { stat } from 'fs';
+// import { extname, join, resolve } from 'path';
+
+// const __dirname = resolve();
+// const target = join(__dirname, './03-files-in-folder/secret-folder');
+
+// async function getFiles(dir) {
+//   const directory = await readdir(dir, { withFileTypes: true });
+
+//   for (const entry of directory) {
+//     let dirName = join(dir, entry.name);
+
+//     if (!entry.isDirectory()) {
+//       stat(dirName, (err, stat) => {
+//         if (err) {
+//           console.log(err);
+//         }
+
+//         let name = entry.name.replace(extname(dirName), '');
+//         let ext = extname(dirName);
+//         let sz = stat.size / 1000;
+
+//         console.log(`${name} - ${ext.replace('.', '')} - ${sz}kb`);
+//       });
+//     }
+//   }
+// }
+
+// getFiles(target);

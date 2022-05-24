@@ -8,8 +8,6 @@ const writeStream = fs.createWriteStream(target, {
   flags: 'a'
 });
 
-// input The Readable stream to listen to.
-// output The Writable stream to write readline data to.
 const rl = readline.createInterface({
   input: stdin,
   output: writeStream
@@ -32,7 +30,6 @@ rl.on('line', input => {
   }
 });
 
-// TODO: SIGINT with rl
 process.on('SIGINT', () => {
   sayBy();
 });
@@ -45,3 +42,61 @@ function sayBy(str = '') {
 function sayHi() {
   stdout.write('Hello! Type someting...\n');
 }
+
+// import { createInterface } from 'node:readline/promises';
+// import { stdin as input, stdout as output } from 'node:process';
+
+// const rl = createInterface({ input, output });
+
+// const answer = await rl.question('What do you think of Node.js? ');
+
+// console.log(`Thank you for your valuable feedback: ${answer}`);
+
+// rl.on('line', (line) => {
+//   console.log(`Received: ${line}`);
+// });
+
+// rl.close();
+
+// import { createInterface } from 'readline';
+// import { createWriteStream } from 'fs';
+// import { join, resolve } from 'path';
+// import { stdout } from 'process';
+
+// const __dirname = resolve();
+// const stream = createWriteStream(join(__dirname, './02-write-file/write.txt'));
+
+// const rl = createInterface({
+//   input: process.stdin,
+//   output: process.stdout,
+//   prompt:
+//     'Do your want to write some more text to file?(Type exit or use ctrl+c to stop writing) \n',
+// });
+
+// function checkClose(text) {
+//   return text.match(/e(xit)/i);
+// }
+
+// rl.question(
+//   'What do your want to write to file?(Type exit or use ctrl+c to stop writing) \n',
+//   (userInput) => {
+//     if (checkClose(userInput)) {
+//       rl.close();
+//     } else {
+//       stream.write(userInput + '\n');
+//       rl.prompt();
+//       rl.on('line', (userInput) => {
+//         if (checkClose(userInput)) {
+//           rl.close();
+//         } else {
+//           stream.write(userInput + '\n');
+//           rl.prompt();
+//         }
+//       });
+//     }
+//   }
+// );
+
+// rl.on('close', () => {
+//   stdout.write('Write Complete');
+// });
