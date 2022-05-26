@@ -20,10 +20,11 @@ rl.on('line', input => {
     let res = input.replace('exit', '');
     if(res === '') {
       sayBy();
-    } else {
-      rl.output.write(`${res}\n`);
-      sayBy();
-    }
+      }
+//      else {
+//       rl.output.write(`${res}\n`);
+//       sayBy();
+//     }
   } else {
     console.log(`Received: ${input}`);
     rl.output.write(`${input}\n`);
